@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import BookSelector from './components/BookSelector';
 import PercentageConverter from './components/PercentageConverter';
-import SprintTimer from './components/SprintTimer';
 import SavedBooks from './components/SavedBooks';
-import { Calculator, Timer as TimerIcon, Info, CheckCircle } from 'lucide-react';
+import { Info, CheckCircle } from 'lucide-react';
 
 const DEFAULT_BOOK = {
   title: 'Sample Fantasy Edition',
@@ -23,9 +22,6 @@ export default function App() {
       return 'dark';
     }
   });
-
-  // Active navigation tab ('converter' or 'timer')
-  const [activeTab, setActiveTab] = useState('converter');
 
   // Active book state with safe localStorage JSON parse
   const [currentBook, setCurrentBook] = useState(() => {
@@ -106,22 +102,6 @@ export default function App() {
         toggleTheme={toggleTheme}
       />
 
-      {/* Navigation Tabs */}
-      <nav className="nav-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'converter' ? 'active' : ''}`}
-          onClick={() => setActiveTab('converter')}
-        >
-          <Calculator size={18} /> Quick Page Converter
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'timer' ? 'active' : ''}`}
-          onClick={() => setActiveTab('timer')}
-        >
-          <TimerIcon size={18} /> Sprint Timer & Companion
-        </button>
-      </nav>
-
       <main className="grid-2" style={{ alignItems: 'start' }}>
         {/* Main Workspace Column */}
         <div>
@@ -132,18 +112,11 @@ export default function App() {
             onSaveToLibrary={handleSaveToLibrary}
           />
 
-          {/* Active View based on Tab */}
-          {activeTab === 'converter' ? (
-            <PercentageConverter
-              currentBook={currentBook}
-              onCopyToast={showToast}
-            />
-          ) : (
-            <SprintTimer
-              currentBook={currentBook}
-              onCopyToast={showToast}
-            />
-          )}
+          {/* Core Page Converter */}
+          <PercentageConverter
+            currentBook={currentBook}
+            onCopyToast={showToast}
+          />
         </div>
 
         {/* Sidebar Column: Saved Books & Instructions */}
@@ -165,7 +138,7 @@ export default function App() {
             <ul style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', paddingLeft: '1.2rem' }}>
               <li>Paste your book link from <strong>Goodreads</strong> or type total physical pages manually.</li>
               <li>Type your e-reader percentage (e.g. <code>42.5%</code>) to see your exact physical page number.</li>
-              <li>Click <strong>Copy Command</strong> (or press <code>Enter</code>) to grab your Bookverse command (`/sprint page X`).</li>
+              <li>Click <strong>Copy Command</strong> or press <code>Enter</code> to copy `/sprint page X`.</li>
               <li>Paste into your Discord reading sprint channel!</li>
             </ul>
           </div>
