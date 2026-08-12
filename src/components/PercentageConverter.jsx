@@ -8,20 +8,19 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
   
   // Options
   const [roundingMode, setRoundingMode] = useState('floor'); // 'floor', 'round', 'ceil'
-  const [copiedType, setCopiedType] = useState(null); // 'start' or 'update' or null
+  const [copied, setCopied] = useState(false);
 
   const totalPages = currentBook ? currentBook.totalPages : 350;
   const currentPctValue = parseFloat(percentage) || 0;
   const computedPage = calculatePageFromPercentage(currentPctValue, totalPages, roundingMode);
 
-  const startCommand = formatDiscordBotCommand(botPreset, computedPage, 'start');
   const updateCommand = formatDiscordBotCommand(botPreset, computedPage, 'end');
 
-  const handleCopy = (text, type) => {
+  const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
-    setCopiedType(type);
+    setCopied(true);
     onCopyToast(`Copied to clipboard: "${text}"`);
-    setTimeout(() => setCopiedType(null), 2000);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -102,49 +101,28 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
         </div>
       </div>
 
-      {/* Discord Bot Commands Section */}
+      {/* Discord Bot Command Section */}
       <div style={{ marginTop: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-            1-Click Discord Bot Commands:
+            1-Click Discord Bot Command:
           </span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {/* Update / Finish Sprint Command */}
-          <div className="discord-box">
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.2rem', fontWeight: 600 }}>
-                Update / Finish Sprint Command:
-              </div>
-              <span className="discord-code">{updateCommand}</span>
+        <div className="discord-box">
+          <div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.2rem', fontWeight: 600 }}>
+              Update / Finish Sprint Command:
             </div>
-            <button 
-              className="btn-copy"
-              onClick={() => handleCopy(updateCommand, 'update')}
-            >
-              {copiedType === 'update' ? <Check size={16} /> : <Copy size={16} />}
-              {copiedType === 'update' ? 'Copied!' : 'Copy Update'}
-            </button>
+            <span className="discord-code">{updateCommand}</span>
           </div>
-
-          {/* Start Sprint Command */}
-          <div className="discord-box" style={{ opacity: 0.9 }}>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.2rem', fontWeight: 600 }}>
-                Start Sprint Command:
-              </div>
-              <span className="discord-code" style={{ color: '#A5B4FC' }}>{startCommand}</span>
-            </div>
-            <button 
-              className="btn-secondary"
-              style={{ padding: '0.5rem 0.9rem', fontSize: '0.8rem' }}
-              onClick={() => handleCopy(startCommand, 'start')}
-            >
-              {copiedType === 'start' ? <Check size={14} /> : <Copy size={14} />}
-              {copiedType === 'start' ? 'Copied!' : 'Copy Start'}
-            </button>
-          </div>
+          <button 
+            className="btn-copy"
+            onClick={() => handleCopy(updateCommand)}
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+            {copied ? 'Copied!' : 'Copy Update'}
+          </button>
         </div>
       </div>
     </div>
