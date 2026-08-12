@@ -15,7 +15,7 @@ const DEFAULT_BOOK = {
 };
 
 export default function App() {
-  // Theme state with safe localStorage lookup
+  // Theme state ('dark', 'oled', 'light') with safe localStorage lookup
   const [theme, setTheme] = useState(() => {
     try {
       return localStorage.getItem('sprint_theme') || 'dark';
@@ -69,10 +69,6 @@ export default function App() {
     } catch (e) {}
   }, [savedBooks]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
   const handleSaveToLibrary = (book) => {
     if (!book || !book.title) return;
     setSavedBooks((prev) => {
@@ -106,50 +102,44 @@ export default function App() {
       {/* Header */}
       <Header
         theme={theme}
-        toggleTheme={toggleTheme}
+        setTheme={setTheme}
       />
 
-      <main className="grid-2" style={{ alignItems: 'start' }}>
-        {/* Main Workspace Column */}
-        <div>
-          {/* Book Setup (Goodreads Link or Manual Input) */}
-          <BookSelector
-            currentBook={currentBook}
-            setCurrentBook={setCurrentBook}
-            onSaveToLibrary={handleSaveToLibrary}
-          />
+      <main style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Book Setup (Goodreads Link or Manual Input) */}
+        <BookSelector
+          currentBook={currentBook}
+          setCurrentBook={setCurrentBook}
+          onSaveToLibrary={handleSaveToLibrary}
+        />
 
-          {/* Core Page Converter */}
-          <PercentageConverter
-            currentBook={currentBook}
-            onCopyToast={showToast}
-          />
-        </div>
+        {/* Core Hero Page Converter */}
+        <PercentageConverter
+          currentBook={currentBook}
+          onCopyToast={showToast}
+        />
 
-        {/* Sidebar Column: Saved Books & Instructions */}
-        <div>
-          {/* Saved Books Library */}
-          <SavedBooks
-            savedBooks={savedBooks}
-            currentBook={currentBook}
-            onSelectBook={(book) => setCurrentBook(book)}
-            onDeleteBook={handleDeleteSavedBook}
-            onTogglePinBook={handleTogglePinBook}
-            onClearAll={handleClearAllSaved}
-          />
+        {/* Saved Books Library */}
+        <SavedBooks
+          savedBooks={savedBooks}
+          currentBook={currentBook}
+          onSelectBook={(book) => setCurrentBook(book)}
+          onDeleteBook={handleDeleteSavedBook}
+          onTogglePinBook={handleTogglePinBook}
+          onClearAll={handleClearAllSaved}
+        />
 
-          {/* Discord Sprint Guide Card */}
-          <div className="glass-card">
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#818CF8', marginBottom: '0.75rem' }}>
-              <Info size={16} /> How to use with Bookverse
-            </h4>
-            <ul style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', paddingLeft: '1.2rem' }}>
-              <li>Paste your book link from <strong>Goodreads</strong> or type total physical pages manually.</li>
-              <li>Type your e-reader percentage (e.g. <code>42.5%</code>) to see your exact physical page number.</li>
-              <li>Click <strong>Copy Command</strong> or press <code>Enter</code> to copy `/sprint page X`.</li>
-              <li>Paste into your Discord reading sprint channel!</li>
-            </ul>
-          </div>
+        {/* Discord Sprint Guide Card */}
+        <div className="glass-card" style={{ marginBottom: 0 }}>
+          <h4 style={{ fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', marginBottom: '0.6rem' }}>
+            <Info size={15} color="var(--accent-primary)" /> Quick Tip for Bookverse Reading Sprints
+          </h4>
+          <ul style={{ fontSize: '0.825rem', color: 'var(--text-muted)', lineHeight: '1.5', paddingLeft: '1.2rem' }}>
+            <li>Paste your book link from <strong>Goodreads</strong> or type total physical pages manually.</li>
+            <li>Type your e-reader percentage (e.g. <code>42.5%</code>) to see your exact physical page number.</li>
+            <li>Click <strong>Copy Command</strong> or press <code>Enter</code> to grab `/sprint page X`.</li>
+            <li>Paste into your Discord reading sprint channel!</li>
+          </ul>
         </div>
       </main>
 
