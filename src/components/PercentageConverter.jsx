@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Percent, Copy, Check, Sparkles } from 'lucide-react';
-import { calculatePageFromPercentage, formatDiscordBotCommand } from '../utils/converter';
+import { calculatePageFromPercentage, formatBookverseCommand } from '../utils/converter';
 
-export default function PercentageConverter({ currentBook, botPreset, onCopyToast }) {
+export default function PercentageConverter({ currentBook, onCopyToast }) {
   // Percentage state
   const [percentage, setPercentage] = useState('0');
   
@@ -10,11 +10,27 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
   const [roundingMode, setRoundingMode] = useState('floor'); // 'floor', 'round', 'ceil'
   const [copied, setCopied] = useState(false);
 
-  const totalPages = currentBook ? currentBook.totalPages : 350;
-  const currentPctValue = parseFloat(percentage) || 0;
-  const computedPage = calculatePageFromPercentage(currentPctValue, totalPages, roundingMode);
+  const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 350;
+  
+  // Clean & clamp percentage input safely
+  let rawPct = parseFloat(percentage);
+  if (isNaN(rawPct)) rawPct = 0;
+  const currentPctValue = Math.min(100, Math.max(0, rawPct));
 
-  const updateCommand = formatDiscordBotCommand(botPreset, computedPage, 'end');
+  const computedPage = calculatePageFromPercentage(currentPctValue, totalPages, roundingMode);
+  const updateCommand = formatBookverseCommand(computedPage);
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    if (val === '') {
+      setPercentage('');
+      return;
+    }
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      setPercentage(val);
+    }
+  };
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -47,7 +63,9 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
         <div className="input-group">
           <div className="input-label">
             <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>Your E-Reader Percentage (%)</span>
-            <span className="mono-font" style={{ color: '#38BDF8', fontWeight: 700, fontSize: '1.1rem' }}>{percentage}%</span>
+            <span className="mono-font" style={{ color: '#38BDF8', fontWeight: 700, fontSize: '1.1rem' }}>
+              {currentPctValue}%
+            </span>
           </div>
           <div className="input-wrapper">
             <Percent className="input-icon" size={20} color="var(--accent-cyan)" />
@@ -60,7 +78,7 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
               style={{ fontSize: '1.3rem', fontWeight: 700 }}
               placeholder="e.g. 35.5"
               value={percentage}
-              onChange={(e) => setPercentage(e.target.value)}
+              onChange={handleInputChange}
               autoFocus
             />
           </div>
@@ -72,7 +90,7 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
           min="0"
           max="100"
           step="0.5"
-          value={percentage || 0}
+          value={currentPctValue}
           onChange={(e) => setPercentage(e.target.value)}
           style={{
             width: '100%',
@@ -97,7 +115,7 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
 
         {/* Progress Bar */}
         <div className="progress-container">
-          <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, currentPctValue))}%` }}></div>
+          <div className="progress-fill" style={{ width: `${currentPctValue}%` }}></div>
         </div>
       </div>
 
@@ -105,14 +123,14 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
       <div style={{ marginTop: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-            1-Click Discord Bot Command:
+            1-Click Bookverse Command:
           </span>
         </div>
 
         <div className="discord-box">
           <div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.2rem', fontWeight: 600 }}>
-              Update / Finish Sprint Command:
+              Bookverse Sprint Command:
             </div>
             <span className="discord-code">{updateCommand}</span>
           </div>
@@ -121,7 +139,7 @@ export default function PercentageConverter({ currentBook, botPreset, onCopyToas
             onClick={() => handleCopy(updateCommand)}
           >
             {copied ? <Check size={16} /> : <Copy size={16} />}
-            {copied ? 'Copied!' : 'Copy Update'}
+            {copied ? 'Copied!' : 'Copy Command'}
           </button>
         </div>
       </div>

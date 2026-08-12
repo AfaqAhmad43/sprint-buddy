@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen, Moon, Sun, MessageSquareCode } from 'lucide-react';
 
-export default function Header({ theme, toggleTheme, botPreset, setBotPreset }) {
+export default function Header({ theme, toggleTheme }) {
   return (
     <header className="app-header">
       <div className="brand-logo">
@@ -11,26 +11,16 @@ export default function Header({ theme, toggleTheme, botPreset, setBotPreset }) 
         <div>
           Sprint<span className="title-gradient">Buddy</span>
           <div style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-muted)' }}>
-            E-Reader to Physical Page Converter
+            E-Reader Page Converter for Bookverse
           </div>
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        {/* Discord Bot Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-input)', padding: '0.4rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+        {/* Bookverse Bot Indicator Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(99, 102, 241, 0.12)', padding: '0.4rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(129, 140, 248, 0.3)', fontSize: '0.85rem' }}>
           <MessageSquareCode size={16} color="var(--accent-cyan)" />
-          <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Bot:</span>
-          <select 
-            value={botPreset} 
-            onChange={(e) => setBotPreset(e.target.value)}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontWeight: 700, outline: 'none', cursor: 'pointer' }}
-          >
-            <option value="bookverse" style={{ background: '#0F172A' }}>Bookverse (/sprint)</option>
-            <option value="sprinty" style={{ background: '#0F172A' }}>Sprinty (!read / !sprint)</option>
-            <option value="bookish" style={{ background: '#0F172A' }}>Bookish (.page)</option>
-            <option value="custom" style={{ background: '#0F172A' }}>Custom Format</option>
-          </select>
+          <span style={{ color: '#A5B4FC', fontWeight: 700 }}>Bookverse Bot</span>
         </div>
 
         {/* Theme Toggle */}

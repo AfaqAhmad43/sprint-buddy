@@ -4,7 +4,7 @@ import BookSelector from './components/BookSelector';
 import PercentageConverter from './components/PercentageConverter';
 import SprintTimer from './components/SprintTimer';
 import SavedBooks from './components/SavedBooks';
-import { Calculator, Timer as TimerIcon, Info, CheckCircle, Sparkles } from 'lucide-react';
+import { Calculator, Timer as TimerIcon, Info, CheckCircle } from 'lucide-react';
 
 const DEFAULT_BOOK = {
   title: 'Sample Fantasy Edition',
@@ -15,25 +15,36 @@ const DEFAULT_BOOK = {
 };
 
 export default function App() {
-  // Theme state
-  const [theme, setTheme] = useState(() => localStorage.getItem('sprint_theme') || 'dark');
-  
-  // Bot preset state ('bookverse', 'sprinty', 'bookish', 'custom')
-  const [botPreset, setBotPreset] = useState(() => localStorage.getItem('sprint_bot') || 'bookverse');
+  // Theme state with safe localStorage lookup
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('sprint_theme') || 'dark';
+    } catch (e) {
+      return 'dark';
+    }
+  });
 
   // Active navigation tab ('converter' or 'timer')
   const [activeTab, setActiveTab] = useState('converter');
 
-  // Active book state
+  // Active book state with safe localStorage JSON parse
   const [currentBook, setCurrentBook] = useState(() => {
-    const saved = localStorage.getItem('sprint_active_book');
-    return saved ? JSON.parse(saved) : DEFAULT_BOOK;
+    try {
+      const saved = localStorage.getItem('sprint_active_book');
+      return saved ? JSON.parse(saved) : DEFAULT_BOOK;
+    } catch (e) {
+      return DEFAULT_BOOK;
+    }
   });
 
-  // Saved books library state
+  // Saved books library state with safe localStorage JSON parse
   const [savedBooks, setSavedBooks] = useState(() => {
-    const saved = localStorage.getItem('sprint_books_library');
-    return saved ? JSON.parse(saved) : [DEFAULT_BOOK];
+    try {
+      const saved = localStorage.getItem('sprint_books_library');
+      return saved ? JSON.parse(saved) : [DEFAULT_BOOK];
+    } catch (e) {
+      return [DEFAULT_BOOK];
+    }
   });
 
   // Toast notification state
@@ -41,23 +52,24 @@ export default function App() {
 
   // Sync theme to document element
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('sprint_theme', theme);
+    try {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('sprint_theme', theme);
+    } catch (e) {}
   }, [theme]);
-
-  // Sync bot preset
-  useEffect(() => {
-    localStorage.setItem('sprint_bot', botPreset);
-  }, [botPreset]);
 
   // Sync active book
   useEffect(() => {
-    localStorage.setItem('sprint_active_book', JSON.stringify(currentBook));
+    try {
+      localStorage.setItem('sprint_active_book', JSON.stringify(currentBook));
+    } catch (e) {}
   }, [currentBook]);
 
   // Sync saved library
   useEffect(() => {
-    localStorage.setItem('sprint_books_library', JSON.stringify(savedBooks));
+    try {
+      localStorage.setItem('sprint_books_library', JSON.stringify(savedBooks));
+    } catch (e) {}
   }, [savedBooks]);
 
   const toggleTheme = () => {
@@ -65,11 +77,11 @@ export default function App() {
   };
 
   const handleSaveToLibrary = (book) => {
+    if (!book || !book.title) return;
     setSavedBooks((prev) => {
-      // Avoid duplicate entries with same title and totalPages
       const exists = prev.some((b) => b.title === book.title && b.totalPages === book.totalPages);
       if (exists) return prev;
-      return [book, ...prev].slice(0, 10); // Keep top 10 recent books
+      return [book, ...prev].slice(0, 10);
     });
   };
 
@@ -92,8 +104,6 @@ export default function App() {
       <Header
         theme={theme}
         toggleTheme={toggleTheme}
-        botPreset={botPreset}
-        setBotPreset={setBotPreset}
       />
 
       {/* Navigation Tabs */}
@@ -126,13 +136,11 @@ export default function App() {
           {activeTab === 'converter' ? (
             <PercentageConverter
               currentBook={currentBook}
-              botPreset={botPreset}
               onCopyToast={showToast}
             />
           ) : (
             <SprintTimer
               currentBook={currentBook}
-              botPreset={botPreset}
               onCopyToast={showToast}
             />
           )}
@@ -157,7 +165,7 @@ export default function App() {
             <ul style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', paddingLeft: '1.2rem' }}>
               <li>Paste your book link from <strong>Goodreads</strong> or type total physical pages manually.</li>
               <li>Type your e-reader percentage (e.g. <code>42.5%</code>) to see your exact physical page number.</li>
-              <li>Click <strong>Copy Update</strong> to grab the Discord bot command.</li>
+              <li>Click <strong>Copy Command</strong> to grab your Bookverse command (`/sprint update page: X`).</li>
               <li>Paste into your Discord reading sprint channel!</li>
             </ul>
           </div>

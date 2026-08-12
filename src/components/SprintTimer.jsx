@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Timer, Award, Zap, Copy, Check } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, Award, Copy, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { calculatePageFromPercentage, calculateSprintStats, formatDiscordBotCommand } from '../utils/converter';
+import { calculatePageFromPercentage, calculateSprintStats, formatBookverseCommand } from '../utils/converter';
 
-export default function SprintTimer({ currentBook, botPreset, onCopyToast }) {
+export default function SprintTimer({ currentBook, onCopyToast }) {
   const [durationMinutes, setDurationMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -14,7 +14,7 @@ export default function SprintTimer({ currentBook, botPreset, onCopyToast }) {
 
   const [copied, setCopied] = useState(false);
 
-  const totalPages = currentBook ? currentBook.totalPages : 350;
+  const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 350;
 
   // Handle timer countdown ticks
   useEffect(() => {
@@ -72,12 +72,12 @@ export default function SprintTimer({ currentBook, botPreset, onCopyToast }) {
   };
 
   const stats = calculateSprintStats(startPct, endPct, totalPages, durationMinutes);
-  const endCommand = formatDiscordBotCommand(botPreset, stats.endPage, 'end');
+  const endCommand = formatBookverseCommand(stats.endPage);
 
   const handleCopyEnd = () => {
     navigator.clipboard.writeText(endCommand);
     setCopied(true);
-    onCopyToast(`Copied Discord Update Command: ${endCommand}`);
+    onCopyToast(`Copied Bookverse Command: ${endCommand}`);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -132,6 +132,8 @@ export default function SprintTimer({ currentBook, botPreset, onCopyToast }) {
           <input
             type="number"
             step="0.1"
+            min="0"
+            max="100"
             className="custom-input no-icon mono-font"
             placeholder="e.g. 10.0"
             value={startPct}
@@ -147,6 +149,8 @@ export default function SprintTimer({ currentBook, botPreset, onCopyToast }) {
           <input
             type="number"
             step="0.1"
+            min="0"
+            max="100"
             className="custom-input no-icon mono-font"
             placeholder="e.g. 18.5"
             value={endPct}
@@ -180,15 +184,15 @@ export default function SprintTimer({ currentBook, botPreset, onCopyToast }) {
             </div>
           </div>
 
-          {/* Quick Copy Command for Bot */}
+          {/* Quick Copy Command for Bookverse Bot */}
           <div className="discord-box" style={{ margin: 0 }}>
             <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.2rem' }}>Discord Bot Command</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: '0.2rem' }}>Bookverse Command</div>
               <span className="discord-code">{endCommand}</span>
             </div>
             <button onClick={handleCopyEnd} className="btn-copy">
               {copied ? <Check size={16} /> : <Copy size={16} />}
-              {copied ? 'Copied!' : 'Copy Result'}
+              {copied ? 'Copied!' : 'Copy Command'}
             </button>
           </div>
         </div>

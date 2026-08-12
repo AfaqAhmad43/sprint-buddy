@@ -26,16 +26,16 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
 
     try {
       const book = await fetchBookMetadata(query);
-      if (book) {
+      if (book && book.title) {
         setCurrentBook(book);
         onSaveToLibrary(book);
         setEditedPages(book.totalPages);
       } else {
-        setErrorMsg('Book not found. You can switch to Manual Entry to type your page count directly!');
+        setErrorMsg('Could not find book pages automatically. Try manual entry below!');
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg('Failed to fetch book. Try entering details manually below.');
+      setErrorMsg('Error fetching book. Enter page count manually below.');
     } finally {
       setLoading(false);
     }
@@ -44,13 +44,13 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
   const handleSetManualBook = (e) => {
     e.preventDefault();
     const pages = parseInt(manualPages, 10);
-    if (!pages || pages <= 0) {
-      setErrorMsg('Please enter a valid page count.');
+    if (isNaN(pages) || pages <= 0) {
+      setErrorMsg('Please enter a valid page count greater than 0.');
       return;
     }
 
     const newBook = {
-      title: manualTitle.trim() || 'My Current Book',
+      title: manualTitle.trim() || 'Custom Edition',
       author: manualAuthor.trim() || 'Author',
       totalPages: pages,
       coverUrl: null,
@@ -65,12 +65,20 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
 
   const handleSaveEditedPages = () => {
     const pages = parseInt(editedPages, 10);
-    if (pages && pages > 0) {
+    if (!isNaN(pages) && pages > 0) {
       const updated = { ...currentBook, totalPages: pages };
       setCurrentBook(updated);
       onSaveToLibrary(updated);
+      setErrorMsg('');
+    } else {
+      setErrorMsg('Page count must be a positive number.');
     }
     setIsEditingPages(false);
+  };
+
+  const handleSwitchMode = (mode) => {
+    setInputMode(mode);
+    setErrorMsg('');
   };
 
   return (
@@ -85,14 +93,14 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
           <button 
             type="button"
             className={`mode-btn ${inputMode === 'goodreads' ? 'active' : ''}`}
-            onClick={() => setInputMode('goodreads')}
+            onClick={() => handleSwitchMode('goodreads')}
           >
             <LinkIcon size={14} /> Goodreads / Search
           </button>
           <button 
             type="button"
             className={`mode-btn ${inputMode === 'manual' ? 'active' : ''}`}
-            onClick={() => setInputMode('manual')}
+            onClick={() => handleSwitchMode('manual')}
           >
             <Edit3 size={14} /> Manual Entry
           </button>
