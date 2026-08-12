@@ -6,11 +6,11 @@ import SavedBooks from './components/SavedBooks';
 import { Info, CheckCircle } from 'lucide-react';
 
 const DEFAULT_BOOK = {
-  title: 'Sample Fantasy Edition',
-  author: 'Brandon Sanderson',
-  totalPages: 540,
+  title: 'Paradise Logic',
+  author: 'Sophie Kemp',
+  totalPages: 304,
   coverUrl: null,
-  source: 'Sample',
+  source: 'Default',
   pinned: true
 };
 
@@ -24,11 +24,17 @@ export default function App() {
     }
   });
 
-  // Active book state with safe localStorage JSON parse
+  // Active book state with safe localStorage JSON parse and migration to Paradise Logic
   const [currentBook, setCurrentBook] = useState(() => {
     try {
       const saved = localStorage.getItem('sprint_active_book');
-      return saved ? JSON.parse(saved) : DEFAULT_BOOK;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.title !== 'Sample Fantasy Edition') {
+          return parsed;
+        }
+      }
+      return DEFAULT_BOOK;
     } catch (e) {
       return DEFAULT_BOOK;
     }
@@ -38,7 +44,15 @@ export default function App() {
   const [savedBooks, setSavedBooks] = useState(() => {
     try {
       const saved = localStorage.getItem('sprint_books_library');
-      return saved ? JSON.parse(saved) : [DEFAULT_BOOK];
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Replace legacy sample book with Paradise Logic
+          const cleaned = parsed.map(b => b.title === 'Sample Fantasy Edition' ? DEFAULT_BOOK : b);
+          return cleaned;
+        }
+      }
+      return [DEFAULT_BOOK];
     } catch (e) {
       return [DEFAULT_BOOK];
     }
@@ -137,7 +151,7 @@ export default function App() {
           <ul style={{ fontSize: '0.825rem', color: 'var(--text-muted)', lineHeight: '1.5', paddingLeft: '1.2rem' }}>
             <li>Paste your book link from <strong>Goodreads</strong> or type total physical pages manually.</li>
             <li>Type your e-reader percentage (e.g. <code>42.5%</code>) to see your exact physical page number.</li>
-            <li>Click <strong>Copy Command</strong> or press <code>Enter</code> to grab `/sprint page X`.</li>
+            <li>Click <strong>Copy Command</strong> or press <code>Enter</code> to copy `/sprint page X`.</li>
             <li>Paste into your Discord reading sprint channel!</li>
           </ul>
         </div>

@@ -15,7 +15,7 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
 
   // Edit page state
   const [isEditingPages, setIsEditingPages] = useState(false);
-  const [editedPages, setEditedPages] = useState(currentBook ? currentBook.totalPages : 350);
+  const [editedPages, setEditedPages] = useState(currentBook ? currentBook.totalPages : 304);
 
   const handleFetchBook = async (e) => {
     e.preventDefault();
@@ -50,8 +50,8 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
     }
 
     const newBook = {
-      title: manualTitle.trim() || 'Custom Edition',
-      author: manualAuthor.trim() || 'Author',
+      title: manualTitle.trim() || 'Paradise Logic',
+      author: manualAuthor.trim() || 'Sophie Kemp',
       totalPages: pages,
       coverUrl: null,
       source: 'Manual Input'
@@ -120,7 +120,7 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
               <input
                 type="text"
                 className="custom-input"
-                placeholder="Paste Goodreads link (e.g. goodreads.com/book/show/...) or type title"
+                placeholder="Paste Goodreads link or search title (e.g. Paradise Logic)"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -145,7 +145,7 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
               <input
                 type="text"
                 className="custom-input no-icon"
-                placeholder="e.g. Babel"
+                placeholder="e.g. Paradise Logic"
                 value={manualTitle}
                 onChange={(e) => setManualTitle(e.target.value)}
               />
@@ -155,7 +155,7 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
               <input
                 type="text"
                 className="custom-input no-icon"
-                placeholder="e.g. R.F. Kuang"
+                placeholder="e.g. Sophie Kemp"
                 value={manualAuthor}
                 onChange={(e) => setManualAuthor(e.target.value)}
               />
@@ -167,7 +167,7 @@ export default function BookSelector({ currentBook, setCurrentBook, onSaveToLibr
             <input
               type="number"
               className="custom-input no-icon mono-font"
-              placeholder="e.g. 544"
+              placeholder="e.g. 304"
               value={manualPages}
               onChange={(e) => setManualPages(e.target.value)}
               min="1"

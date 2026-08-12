@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Percent, Copy, Check, Sparkles, BookOpen, Clock, Trash2, Layers } from 'lucide-react';
+import { Percent, Copy, Check, Sparkles, BookOpen, Clock, Layers } from 'lucide-react';
 import { calculatePageFromPercentage, formatBookverseCommand } from '../utils/converter';
 
 export default function PercentageConverter({ currentBook, onCopyToast }) {
@@ -27,7 +27,7 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
     } catch (e) {}
   }, [commandHistory]);
 
-  const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 350;
+  const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 304;
   
   // Clean & clamp percentage input safely
   let rawPct = parseFloat(percentage);
@@ -73,7 +73,7 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
       time: timeStr,
       command: text,
       page: computedPage,
-      bookTitle: currentBook ? currentBook.title : 'Book'
+      bookTitle: currentBook ? currentBook.title : 'Paradise Logic'
     };
 
     setCommandHistory((prev) => [logItem, ...prev.filter(item => item.command !== text)].slice(0, 5));
