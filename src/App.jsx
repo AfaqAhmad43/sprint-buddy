@@ -165,7 +165,7 @@ export default function App() {
             <ul style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', paddingLeft: '1.2rem' }}>
               <li>Paste your book link from <strong>Goodreads</strong> or type total physical pages manually.</li>
               <li>Type your e-reader percentage (e.g. <code>42.5%</code>) to see your exact physical page number.</li>
-              <li>Click <strong>Copy Command</strong> to grab your Bookverse command (`/sprint update page: X`).</li>
+              <li>Click <strong>Copy Command</strong> (or press <code>Enter</code>) to grab your Bookverse command (`/sprint page X`).</li>
               <li>Paste into your Discord reading sprint channel!</li>
             </ul>
           </div>

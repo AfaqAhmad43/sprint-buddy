@@ -26,7 +26,7 @@ export const calculatePageFromPercentage = (percentage, totalPages, roundingMode
 
 export const formatBookverseCommand = (pageNumber) => {
   const page = Math.max(0, parseInt(pageNumber, 10) || 0);
-  return `/sprint update page: ${page}`;
+  return `/sprint page ${page}`;
 };
 
 export const calculateSprintStats = (startPct, endPct, totalPages, durationMinutes) => {
@@ -47,4 +47,31 @@ export const calculateSprintStats = (startPct, endPct, totalPages, durationMinut
     minutesPerPage,
     pctGained
   };
+};
+
+/**
+ * Web Audio API Chime for Sprint Completion (Zero external asset dependencies)
+ */
+export const playSprintChime = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 arpeggio chime
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.12 + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.45);
+    });
+  } catch (e) {
+    console.warn('Audio chime error:', e);
+  }
 };

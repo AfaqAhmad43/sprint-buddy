@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Timer, Award, Copy, Check } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, Award, Copy, Check, Volume2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { calculatePageFromPercentage, calculateSprintStats, formatBookverseCommand } from '../utils/converter';
+import { calculatePageFromPercentage, calculateSprintStats, formatBookverseCommand, playSprintChime } from '../utils/converter';
 
 export default function SprintTimer({ currentBook, onCopyToast }) {
   const [durationMinutes, setDurationMinutes] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
   const [startPct, setStartPct] = useState('0');
   const [endPct, setEndPct] = useState('0');
@@ -27,10 +28,15 @@ export default function SprintTimer({ currentBook, onCopyToast }) {
       setIsRunning(false);
       setSprintFinished(true);
       
+      // Play audio chime QoL feature
+      if (soundEnabled) {
+        playSprintChime();
+      }
+
       // Trigger celebration confetti
       try {
         confetti({
-          particleCount: 80,
+          particleCount: 90,
           spread: 70,
           origin: { y: 0.6 }
         });
@@ -40,7 +46,7 @@ export default function SprintTimer({ currentBook, onCopyToast }) {
     }
 
     return () => clearInterval(timerId);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, soundEnabled]);
 
   const handleSetPresetDuration = (mins) => {
     setDurationMinutes(mins);
@@ -89,7 +95,18 @@ export default function SprintTimer({ currentBook, onCopyToast }) {
           Live Reading Sprint Timer
         </h3>
 
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* Sound alert toggle button */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`mode-btn ${soundEnabled ? 'active' : ''}`}
+            style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+            title={soundEnabled ? 'Chime Sound Enabled' : 'Chime Sound Muted'}
+          >
+            <Volume2 size={14} color={soundEnabled ? '#10B981' : 'var(--text-dim)'} />
+          </button>
+
+          {/* Duration Presets */}
           {[10, 15, 20, 25, 30].map((m) => (
             <button
               key={m}

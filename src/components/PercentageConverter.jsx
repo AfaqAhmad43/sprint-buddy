@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Percent, Copy, Check, Sparkles } from 'lucide-react';
+import { Percent, Copy, Check, Sparkles, CornerDownLeft } from 'lucide-react';
 import { calculatePageFromPercentage, formatBookverseCommand } from '../utils/converter';
 
 export default function PercentageConverter({ currentBook, onCopyToast }) {
@@ -32,11 +32,28 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
     }
   };
 
+  const handleQuickAdd = (delta) => {
+    const next = Math.min(100, Math.max(0, (parseFloat(percentage) || 0) + delta));
+    setPercentage(next.toFixed(1).replace(/\.0$/, ''));
+  };
+
+  const handleQuickSet = (value) => {
+    setPercentage(value.toString());
+  };
+
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
-    onCopyToast(`Copied to clipboard: "${text}"`);
+    onCopyToast(`Copied Bookverse Command: "${text}"`);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Keyboard shortcut: Press Enter to copy command immediately!
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleCopy(updateCommand);
+    }
   };
 
   return (
@@ -79,8 +96,12 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
               placeholder="e.g. 35.5"
               value={percentage}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               autoFocus
             />
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem', marginTop: '0.2rem' }}>
+            <CornerDownLeft size={12} color="#818CF8" /> Press <strong style={{ color: '#818CF8' }}>Enter</strong> to Copy Command
           </div>
         </div>
 
@@ -96,9 +117,20 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
             width: '100%',
             accentColor: 'var(--accent-primary)',
             cursor: 'pointer',
-            marginTop: '0.5rem'
+            marginTop: '0.25rem'
           }}
         />
+
+        {/* QoL Quick Preset Buttons */}
+        <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+          <button onClick={() => handleQuickAdd(1)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>+1%</button>
+          <button onClick={() => handleQuickAdd(5)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>+5%</button>
+          <button onClick={() => handleQuickAdd(10)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>+10%</button>
+          <button onClick={() => handleQuickSet(25)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>25%</button>
+          <button onClick={() => handleQuickSet(50)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>50%</button>
+          <button onClick={() => handleQuickSet(75)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>75%</button>
+          <button onClick={() => handleQuickSet(100)} className="mode-btn" style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>100%</button>
+        </div>
       </div>
 
       {/* Hero Result Display */}
@@ -123,7 +155,7 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
       <div style={{ marginTop: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-            1-Click Bookverse Command:
+            1-Click Bookverse Bot Command:
           </span>
         </div>
 
