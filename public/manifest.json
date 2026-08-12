@@ -1,0 +1,18 @@
+{
+  "short_name": "SprintBuddy",
+  "name": "SprintBuddy - E-Reader Page Converter",
+  "description": "Convert e-reader percentage to exact physical book pages for Discord reading sprints (Bookverse bot).",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "display": "standalone",
+  "orientation": "portrait"
+}

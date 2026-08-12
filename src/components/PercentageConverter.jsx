@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Percent, Copy, Check, Sparkles, CornerDownLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Percent, Copy, Check, Sparkles, BookOpen, Clock, Trash2, Layers } from 'lucide-react';
 import { calculatePageFromPercentage, formatBookverseCommand } from '../utils/converter';
 
 export default function PercentageConverter({ currentBook, onCopyToast }) {
@@ -10,6 +10,23 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
   const [roundingMode, setRoundingMode] = useState('floor'); // 'floor', 'round', 'ceil'
   const [copied, setCopied] = useState(false);
 
+  // Copied Command History Log (stored in localStorage)
+  const [commandHistory, setCommandHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sprint_copy_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Sync command history to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('sprint_copy_history', JSON.stringify(commandHistory));
+    } catch (e) {}
+  }, [commandHistory]);
+
   const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 350;
   
   // Clean & clamp percentage input safely
@@ -18,6 +35,7 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
   const currentPctValue = Math.min(100, Math.max(0, rawPct));
 
   const computedPage = calculatePageFromPercentage(currentPctValue, totalPages, roundingMode);
+  const pagesRemaining = Math.max(0, totalPages - computedPage);
   const updateCommand = formatBookverseCommand(computedPage);
 
   const handleInputChange = (e) => {
@@ -46,14 +64,23 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
     setCopied(true);
     onCopyToast(`Copied Bookverse Command: "${text}"`);
     setTimeout(() => setCopied(false), 2000);
+
+    // Save to history log (QoL Feature 4)
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const logItem = {
+      id: Date.now(),
+      time: timeStr,
+      command: text,
+      page: computedPage,
+      bookTitle: currentBook ? currentBook.title : 'Book'
+    };
+
+    setCommandHistory((prev) => [logItem, ...prev.filter(item => item.command !== text)].slice(0, 5));
   };
 
-  // Keyboard shortcut: Press Enter to copy command immediately!
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleCopy(updateCommand);
-    }
+  const handleClearHistory = () => {
+    setCommandHistory([]);
   };
 
   return (
@@ -96,12 +123,8 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
               placeholder="e.g. 35.5"
               value={percentage}
               onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
               autoFocus
             />
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem', marginTop: '0.2rem' }}>
-            <CornerDownLeft size={12} color="#818CF8" /> Press <strong style={{ color: '#818CF8' }}>Enter</strong> to Copy Command
           </div>
         </div>
 
@@ -141,8 +164,13 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
         <div className="result-number">
           Page {computedPage}
         </div>
-        <div className="result-subtitle">
-          out of <strong style={{ color: 'var(--text-main)' }}>{totalPages}</strong> total physical pages ({currentPctValue}% finished)
+        <div className="result-subtitle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <span>out of <strong style={{ color: 'var(--text-main)' }}>{totalPages}</strong> total physical pages ({currentPctValue}% finished)</span>
+          
+          {/* QoL Feature 3: Pages Remaining Badge */}
+          <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34D399', padding: '0.2rem 0.55rem', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+            <BookOpen size={12} /> {pagesRemaining} pages left
+          </span>
         </div>
 
         {/* Progress Bar */}
@@ -155,7 +183,7 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
       <div style={{ marginTop: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-muted)' }}>
-            1-Click Bookverse Bot Command:
+            1-Click Bookverse Command:
           </span>
         </div>
 
@@ -174,6 +202,62 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
             {copied ? 'Copied!' : 'Copy Command'}
           </button>
         </div>
+      </div>
+
+      {/* QoL Feature 4: Copied Command History Log */}
+      {commandHistory.length > 0 && (
+        <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Clock size={14} color="#818CF8" /> Copied Command History
+            </span>
+            <button onClick={handleClearHistory} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.75rem', cursor: 'pointer' }}>
+              Clear Log
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {commandHistory.map((item) => (
+              <div 
+                key={item.id}
+                onClick={() => handleCopy(item.command)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-color)',
+                  padding: '0.45rem 0.75rem',
+                  borderRadius: 'var(--radius-md)',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem'
+                }}
+                title="Click to copy again"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{item.time}</span>
+                  <span className="mono-font" style={{ color: '#38BDF8', fontWeight: 600 }}>{item.command}</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Page {item.page}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* QoL Feature 2: Sticky Mobile Quick-Copy Footer */}
+      <div className="mobile-quick-footer">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Layers size={18} color="var(--accent-cyan)" />
+          <div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{currentPctValue}% ({pagesRemaining} left)</div>
+            <div className="mono-font" style={{ fontWeight: 800, fontSize: '1.05rem', color: 'white' }}>Page {computedPage}</div>
+          </div>
+        </div>
+        <button className="btn-copy" onClick={() => handleCopy(updateCommand)}>
+          {copied ? <Check size={16} /> : <Copy size={16} />}
+          {copied ? 'Copied!' : 'Copy /sprint'}
+        </button>
       </div>
     </div>
   );

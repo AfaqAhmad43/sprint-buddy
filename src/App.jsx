@@ -10,7 +10,8 @@ const DEFAULT_BOOK = {
   author: 'Brandon Sanderson',
   totalPages: 540,
   coverUrl: null,
-  source: 'Sample'
+  source: 'Sample',
+  pinned: true
 };
 
 export default function App() {
@@ -85,6 +86,12 @@ export default function App() {
     setSavedBooks((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleTogglePinBook = (targetBook) => {
+    setSavedBooks((prev) =>
+      prev.map((b) => (b.title === targetBook.title && b.totalPages === targetBook.totalPages ? { ...b, pinned: !b.pinned } : b))
+    );
+  };
+
   const handleClearAllSaved = () => {
     setSavedBooks([]);
   };
@@ -127,6 +134,7 @@ export default function App() {
             currentBook={currentBook}
             onSelectBook={(book) => setCurrentBook(book)}
             onDeleteBook={handleDeleteSavedBook}
+            onTogglePinBook={handleTogglePinBook}
             onClearAll={handleClearAllSaved}
           />
 
