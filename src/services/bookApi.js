@@ -1,141 +1,187 @@
 /**
- * Book API Service
- * Fetches book page counts and metadata from Open Library & Google Books APIs.
- * Supports Goodreads URL parsing, ISBN lookup, and keyword search.
+ * Robust Book & Goodreads API Service
+ * Parses Goodreads links, ISBNs, and searches Open Library & Google Books.
  */
 
-export const parseGoodreadsUrl = (urlStr) => {
-  if (!urlStr) return null;
-  const cleanUrl = urlStr.trim();
+export const parseGoodreadsUrl = (inputStr) => {
+  if (!inputStr) return null;
+  let clean = inputStr.trim();
 
-  // Check if direct ISBN-10 or ISBN-13
-  const cleanDigits = cleanUrl.replace(/[^0-9X]/gi, '');
-  if (cleanDigits.length === 10 || cleanDigits.length === 13) {
-    return { type: 'isbn', value: cleanDigits };
+  // Strip query parameters and hashes (e.g. ?from_search=true)
+  clean = clean.split('?')[0].split('#')[0].replace(/\/$/, '');
+
+  // 1. Check for standalone ISBN-10 or ISBN-13 (or ISBN embedded in Goodreads URL)
+  const isbnMatches = clean.match(/\b(\d{13}|\d{10}|\d{9}[\dX])\b/gi);
+  if (isbnMatches) {
+    const validIsbn = isbnMatches.find(d => d.length === 13 || d.length === 10);
+    if (validIsbn) {
+      return { type: 'isbn', value: validIsbn };
+    }
   }
 
-  // Extract pattern from Goodreads URLs:
-  // e.g., https://www.goodreads.com/book/show/58283080-babel-or-the-necessity-of-violence
-  // or https://www.goodreads.com/book/show/9780593356159-iron-flame
-  const grMatch = cleanUrl.match(/goodreads\.com\/book\/show\/(\d+)[.-]?([^/?#]*)/i);
+  // 2. Match Goodreads URL structure:
+  // e.g. https://www.goodreads.com/book/show/58283080-babel-or-the-necessity-of-violence
+  // or https://www.goodreads.com/book/show/2657.To_Kill_a_Mockingbird
+  // or https://www.goodreads.com/book/show/186074
+  const grMatch = clean.match(/goodreads\.com\/book\/show\/(\d+)[._-]?([^/]*)/i);
   if (grMatch) {
-    const idOrIsbn = grMatch[1];
-    const slug = grMatch[2];
+    const grId = grMatch[1];
+    const rawSlug = grMatch[2];
 
-    // If ID is 10 or 13 digits, it's likely an ISBN
-    if (idOrIsbn.length === 10 || idOrIsbn.length === 13) {
-      return { type: 'isbn', value: idOrIsbn };
+    // If ID itself is an ISBN
+    if (grId.length === 10 || grId.length === 13) {
+      return { type: 'isbn', value: grId };
     }
 
-    // Convert slug (e.g. babel-or-the-necessity-of-violence) to search query
-    const titleQuery = slug ? slug.replace(/[-_]+/g, ' ').trim() : '';
-    return { type: 'gr_slug', grId: idOrIsbn, titleQuery: titleQuery || idOrIsbn };
+    if (rawSlug && rawSlug.trim() !== '') {
+      // Clean slug into search terms
+      const titleQuery = rawSlug.replace(/[-_.]+/g, ' ').replace(/\s+/g, ' ').trim();
+      return { type: 'slug', grId, titleQuery };
+    }
+
+    return { type: 'gr_id', grId, titleQuery: grId };
   }
 
-  // Generic query string fallback
-  return { type: 'search', value: cleanUrl };
+  // Fallback: Use string as generic query search
+  return { type: 'search', titleQuery: clean };
 };
 
 export const fetchBookMetadata = async (inputQuery) => {
   if (!inputQuery) return null;
 
   const parsed = parseGoodreadsUrl(inputQuery);
+  console.log('Parsed Goodreads input:', parsed);
 
-  // Strategy 1: If we have an ISBN, query Google Books & Open Library by ISBN
+  // Strategy A: If ISBN detected, search Open Library & Google Books by ISBN
   if (parsed && parsed.type === 'isbn') {
-    const isbnResult = await fetchByIsbn(parsed.value);
-    if (isbnResult) return isbnResult;
+    const isbnBook = await fetchByIsbn(parsed.value);
+    if (isbnBook && isbnBook.totalPages > 0) return isbnBook;
   }
 
-  // Strategy 2: If we have a title query from Goodreads slug or search string
+  // Strategy B: Search Open Library by Title/Query with Edition details
   const searchQuery = parsed && parsed.titleQuery ? parsed.titleQuery : inputQuery;
-
-  // Try Google Books Search
+  
   try {
-    const gResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=5`);
-    if (gResponse.ok) {
-      const gData = await gResponse.json();
-      if (gData.items && gData.items.length > 0) {
-        // Find best item with pageCount
-        const bestItem = gData.items.find(item => item.volumeInfo?.pageCount > 0) || gData.items[0];
-        const info = bestItem.volumeInfo;
-
-        return {
-          title: info.title || 'Unknown Title',
-          author: info.authors ? info.authors.join(', ') : 'Unknown Author',
-          totalPages: info.pageCount || 300,
-          coverUrl: info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null,
-          isbn: info.industryIdentifiers?.[0]?.identifier || null,
-          publisher: info.publisher || '',
-          source: 'Google Books API'
-        };
-      }
+    const olResult = await fetchFromOpenLibrary(searchQuery);
+    if (olResult && olResult.totalPages > 0) {
+      return olResult;
     }
   } catch (err) {
-    console.warn('Google Books API search error:', err);
+    console.warn('Open Library search warning:', err);
   }
 
-  // Strategy 3: Try Open Library Search as secondary fallback
+  // Strategy C: Google Books API Fallback
   try {
-    const olResponse = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&limit=5`);
-    if (olResponse.ok) {
-      const olData = await olResponse.json();
-      if (olData.docs && olData.docs.length > 0) {
-        const doc = olData.docs.find(d => d.number_of_pages_median || d.number_of_pages) || olData.docs[0];
-        const pages = doc.number_of_pages_median || doc.number_of_pages || 300;
-        const coverId = doc.cover_i;
-
-        return {
-          title: doc.title || 'Unknown Title',
-          author: doc.author_name ? doc.author_name.join(', ') : 'Unknown Author',
-          totalPages: pages,
-          coverUrl: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg` : null,
-          isbn: doc.isbn ? doc.isbn[0] : null,
-          source: 'Open Library API'
-        };
-      }
+    const gResult = await fetchFromGoogleBooks(searchQuery);
+    if (gResult && gResult.totalPages > 0) {
+      return gResult;
     }
   } catch (err) {
-    console.warn('Open Library API search error:', err);
+    console.warn('Google Books search warning:', err);
   }
 
-  return null;
+  // Strategy D: Fallback object with parsed title so user can adjust page count manually
+  const formattedTitle = searchQuery.replace(/\b\w/g, c => c.toUpperCase());
+  return {
+    title: formattedTitle.length > 2 ? formattedTitle : 'Selected Book',
+    author: 'Unknown Author',
+    totalPages: 350,
+    coverUrl: null,
+    source: 'Title Lookup (Set Pages Below)'
+  };
 };
 
-const fetchByIsbn = async (isbn) => {
-  try {
-    const gResponse = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
-    if (gResponse.ok) {
-      const gData = await gResponse.json();
-      if (gData.items && gData.items.length > 0) {
-        const info = gData.items[0].volumeInfo;
-        if (info.pageCount) {
-          return {
-            title: info.title || 'Unknown Title',
-            author: info.authors ? info.authors.join(', ') : 'Unknown Author',
-            totalPages: info.pageCount,
-            coverUrl: info.imageLinks?.thumbnail || null,
-            isbn: isbn,
-            source: 'Google Books (ISBN)'
-          };
+// Open Library Multi-edition searcher
+const fetchFromOpenLibrary = async (query) => {
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&fields=title,author_name,edition_key,cover_i,isbn,number_of_pages_median&limit=5`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  if (!data.docs || data.docs.length === 0) return null;
+
+  for (const doc of data.docs) {
+    let pages = doc.number_of_pages_median || 0;
+    let coverUrl = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null;
+
+    // If doc page count missing, check top 3 editions
+    if (!pages && doc.edition_key && doc.edition_key.length > 0) {
+      for (const edKey of doc.edition_key.slice(0, 3)) {
+        try {
+          const edRes = await fetch(`https://openlibrary.org/books/${edKey}.json`);
+          if (edRes.ok) {
+            const edData = await edRes.json();
+            if (edData.number_of_pages && edData.number_of_pages > 0) {
+              pages = edData.number_of_pages;
+              if (!coverUrl && edData.covers && edData.covers[0]) {
+                coverUrl = `https://covers.openlibrary.org/b/id/${edData.covers[0]}-M.jpg`;
+              }
+              break;
+            }
+          }
+        } catch (e) {
+          // ignore edition fetch error
         }
       }
     }
-  } catch (e) {
-    console.warn('ISBN Google Books error:', e);
+
+    if (pages > 0) {
+      return {
+        title: doc.title || 'Unknown Title',
+        author: doc.author_name ? doc.author_name.join(', ') : 'Unknown Author',
+        totalPages: pages,
+        coverUrl: coverUrl,
+        isbn: doc.isbn ? doc.isbn[0] : null,
+        source: 'Open Library'
+      };
+    }
   }
 
+  // Fallback to first doc even if pages not found directly
+  const first = data.docs[0];
+  return {
+    title: first.title || 'Unknown Title',
+    author: first.author_name ? first.author_name.join(', ') : 'Unknown Author',
+    totalPages: 350,
+    coverUrl: first.cover_i ? `https://covers.openlibrary.org/b/id/${first.cover_i}-M.jpg` : null,
+    source: 'Open Library (Set Pages Below)'
+  };
+};
+
+// Google Books Fallback Searcher
+const fetchFromGoogleBooks = async (query) => {
+  const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  if (!data.items || data.items.length === 0) return null;
+
+  const bestItem = data.items.find(item => item.volumeInfo?.pageCount > 0) || data.items[0];
+  const info = bestItem.volumeInfo;
+
+  return {
+    title: info.title || 'Unknown Title',
+    author: info.authors ? info.authors.join(', ') : 'Unknown Author',
+    totalPages: info.pageCount || 350,
+    coverUrl: info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null,
+    isbn: info.industryIdentifiers?.[0]?.identifier || null,
+    source: 'Google Books'
+  };
+};
+
+// ISBN Searcher
+const fetchByIsbn = async (isbn) => {
   try {
-    const olResponse = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
-    if (olResponse.ok) {
-      const olData = await olResponse.json();
+    const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`);
+    if (res.ok) {
+      const data = await res.json();
       const key = `ISBN:${isbn}`;
-      if (olData[key]) {
-        const book = olData[key];
+      if (data[key]) {
+        const book = data[key];
         return {
           title: book.title || 'Unknown Title',
           author: book.authors ? book.authors.map(a => a.name).join(', ') : 'Unknown Author',
-          totalPages: book.number_of_pages || 300,
+          totalPages: book.number_of_pages || 350,
           coverUrl: book.cover?.medium || null,
           isbn: isbn,
           source: 'Open Library (ISBN)'
@@ -143,8 +189,7 @@ const fetchByIsbn = async (isbn) => {
       }
     }
   } catch (e) {
-    console.warn('ISBN Open Library error:', e);
+    console.warn(e);
   }
-
-  return null;
+  return fetchFromGoogleBooks(`isbn:${isbn}`);
 };
