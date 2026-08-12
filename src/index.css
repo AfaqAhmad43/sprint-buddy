@@ -1,14 +1,14 @@
 /* ==========================================================================
-   SprintBuddy - Lightweight & High-Performance Design System
-   Zero-lag, battery-efficient, high-contrast typography & sleek themes.
+   SprintBuddy - Refined Glassmorphism & High-Performance Design System
+   Sleek glassmorphic cards, smooth buttery animations, crisp typography.
    ========================================================================== */
 
 :root {
-  /* Dark Theme (Default Slate) */
+  /* Dark Theme (Default Slate Glass) */
   --bg-main: #0B0F19;
-  --bg-card: #121827;
-  --bg-card-hover: #1E293B;
-  --bg-input: #0B0F19;
+  --bg-card: rgba(18, 24, 38, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --bg-input: rgba(11, 15, 25, 0.8);
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: #818CF8;
 
@@ -26,18 +26,18 @@
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
   --radius-full: 9999px;
 
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 /* OLED Pitch Black Theme */
 [data-theme='oled'] {
   --bg-main: #000000;
-  --bg-card: #0F141C;
-  --bg-card-hover: #171E2B;
-  --bg-input: #05070A;
+  --bg-card: rgba(15, 20, 28, 0.88);
+  --bg-card-hover: rgba(23, 30, 43, 0.95);
+  --bg-input: rgba(5, 7, 10, 0.9);
   --border-color: rgba(255, 255, 255, 0.12);
   --border-focus: #818CF8;
 
@@ -45,15 +45,15 @@
   --text-muted: #A1A1AA;
   --text-dim: #71717A;
 
-  --shadow-card: none;
+  --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.9);
 }
 
-/* Polished & Crisp Light Theme */
+/* Polished Glass Light Theme */
 [data-theme='light'] {
   --bg-main: #F1F5F9;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F8FAFC;
-  --bg-input: #F8FAFC;
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card-hover: rgba(248, 250, 252, 0.95);
+  --bg-input: rgba(241, 245, 249, 0.9);
   --border-color: rgba(15, 23, 42, 0.09);
   --border-focus: #4F46E5;
 
@@ -66,7 +66,7 @@
   --accent-cyan: #0284C7;
   --accent-emerald: #059669;
 
-  --shadow-card: 0 4px 15px rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -81,7 +81,12 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   min-height: 100vh;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+  background-attachment: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* App Container (Single-Column Focus Layout) */
@@ -94,16 +99,19 @@ body {
 /* Glass Card */
 .glass-card {
   background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-card);
   margin-bottom: 1.25rem;
-  transition: border-color 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(129, 140, 248, 0.25);
+  border-color: rgba(129, 140, 248, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Typography Helpers */
@@ -146,12 +154,15 @@ body {
   align-items: center;
   justify-content: center;
   color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* Theme Segmented Switcher */
 .theme-switcher {
   display: flex;
   background: var(--bg-input);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
   padding: 0.2rem;
@@ -170,12 +181,13 @@ body {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  transition: all 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .theme-btn.active {
   background: var(--accent-primary);
   color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 /* Mode Switcher Buttons (Goodreads vs Manual) */
@@ -202,14 +214,14 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  transition: all 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mode-btn.active {
   background: var(--bg-card);
   color: var(--text-main);
   border: 1px solid var(--border-color);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 /* Quick Jump Buttons */
@@ -222,13 +234,14 @@ body {
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.25s ease;
 }
 
 .quick-btn:hover {
   background: var(--accent-primary);
   color: white;
   border-color: var(--accent-primary);
+  transform: translateY(-1px);
 }
 
 /* Forms & Inputs */
@@ -270,7 +283,7 @@ body {
   color: var(--text-main);
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .custom-input.no-icon {
@@ -279,6 +292,7 @@ body {
 
 .custom-input:focus {
   border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
 }
 
 .custom-input::placeholder {
@@ -287,7 +301,7 @@ body {
 
 /* Buttons */
 .btn-primary {
-  background: var(--accent-primary);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-hover) 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.25rem;
@@ -299,11 +313,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: background-color 0.15s ease;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-primary:hover {
-  background: var(--accent-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 .btn-secondary {
@@ -319,7 +335,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  transition: background-color 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-secondary:hover {
@@ -328,11 +344,12 @@ body {
 
 /* Page Result Hero Card */
 .result-hero {
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+  border: 1px solid rgba(129, 140, 248, 0.2);
   border-radius: var(--radius-md);
   padding: 1.5rem 1rem;
   text-align: center;
+  transition: all 0.3s ease;
 }
 
 .result-number {
@@ -340,8 +357,11 @@ body {
   font-weight: 800;
   line-height: 1;
   font-family: var(--font-mono);
-  color: var(--text-main);
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0.4rem 0;
+  transition: all 0.3s ease;
 }
 
 .result-subtitle {
@@ -350,11 +370,11 @@ body {
   font-weight: 500;
 }
 
-/* Progress Bar */
+/* Progress Bar (Buttery Smooth 0.4s Animation) */
 .progress-container {
   width: 100%;
   height: 8px;
-  background: var(--bg-main);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-full);
   overflow: hidden;
   margin: 1rem 0 0.25rem 0;
@@ -362,9 +382,9 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: var(--accent-primary);
+  background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-cyan) 100%);
   border-radius: var(--radius-full);
-  transition: width 0.2s ease;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Discord Bot Command Box */
@@ -378,6 +398,7 @@ body {
   justify-content: space-between;
   gap: 1rem;
   margin-top: 0.85rem;
+  transition: all 0.3s ease;
 }
 
 .discord-code {
@@ -402,10 +423,13 @@ body {
   justify-content: center;
   gap: 0.35rem;
   white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-copy:hover {
   filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
 /* Book Preview Card */
@@ -477,16 +501,19 @@ body {
 
 .toast {
   background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--text-main);
   border: 1px solid var(--accent-emerald);
   padding: 0.75rem 1.2rem;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-size: 0.85rem;
   font-weight: 600;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Mobile Sticky Quick-Copy Footer */
@@ -551,6 +578,8 @@ body {
     left: 0;
     right: 0;
     background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-color);
     padding: 0.65rem 1rem;
     z-index: 999;
