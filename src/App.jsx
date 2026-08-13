@@ -3,6 +3,7 @@ import Header from './components/Header';
 import BookSelector from './components/BookSelector';
 import PercentageConverter from './components/PercentageConverter';
 import SavedBooks from './components/SavedBooks';
+import SprintTimer from './components/SprintTimer';
 import { Info, CheckCircle } from 'lucide-react';
 
 const DEFAULT_BOOK = {
@@ -83,11 +84,21 @@ export default function App() {
     } catch (e) {}
   }, [savedBooks]);
 
+  /**
+   * Bug fix: When saving a book to library, update the existing entry if title matches
+   * (handles inline page count edits correctly — no duplicates).
+   */
   const handleSaveToLibrary = (book) => {
     if (!book || !book.title) return;
     setSavedBooks((prev) => {
-      const exists = prev.some((b) => b.title === book.title && b.totalPages === book.totalPages);
-      if (exists) return prev;
+      const existingIdx = prev.findIndex((b) => b.title === book.title);
+      if (existingIdx !== -1) {
+        // Update existing entry in place (preserves pinned state etc.)
+        const updated = [...prev];
+        updated[existingIdx] = { ...prev[existingIdx], ...book };
+        return updated;
+      }
+      // New book: add to front, cap at 10
       return [book, ...prev].slice(0, 10);
     });
   };
@@ -129,6 +140,12 @@ export default function App() {
 
         {/* Core Hero Page Converter */}
         <PercentageConverter
+          currentBook={currentBook}
+          onCopyToast={showToast}
+        />
+
+        {/* Live Reading Sprint Timer */}
+        <SprintTimer
           currentBook={currentBook}
           onCopyToast={showToast}
         />

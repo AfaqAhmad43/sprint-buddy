@@ -59,24 +59,29 @@ export default function PercentageConverter({ currentBook, onCopyToast }) {
     setPercentage(value.toString());
   };
 
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    onCopyToast(`Copied Bookverse Command: "${text}"`);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      onCopyToast(`Copied Bookverse Command: "${text}"`);
+      setTimeout(() => setCopied(false), 2000);
 
-    // Save to history log (QoL Feature 4)
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const logItem = {
-      id: Date.now(),
-      time: timeStr,
-      command: text,
-      page: computedPage,
-      bookTitle: currentBook ? currentBook.title : 'Paradise Logic'
-    };
+      // Save to history log (QoL Feature 4)
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const logItem = {
+        id: Date.now(),
+        time: timeStr,
+        command: text,
+        page: computedPage,
+        bookTitle: currentBook ? currentBook.title : 'Paradise Logic'
+      };
 
-    setCommandHistory((prev) => [logItem, ...prev.filter(item => item.command !== text)].slice(0, 5));
+      setCommandHistory((prev) => [logItem, ...prev.filter(item => item.command !== text)].slice(0, 5));
+    } catch (err) {
+      console.warn('Clipboard write failed:', err);
+      onCopyToast('Could not copy — please copy manually.');
+    }
   };
 
   const handleClearHistory = () => {

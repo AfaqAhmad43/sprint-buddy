@@ -80,11 +80,16 @@ export default function SprintTimer({ currentBook, onCopyToast }) {
   const stats = calculateSprintStats(startPct, endPct, totalPages, durationMinutes);
   const endCommand = formatBookverseCommand(stats.endPage);
 
-  const handleCopyEnd = () => {
-    navigator.clipboard.writeText(endCommand);
-    setCopied(true);
-    onCopyToast(`Copied Bookverse Command: ${endCommand}`);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyEnd = async () => {
+    try {
+      await navigator.clipboard.writeText(endCommand);
+      setCopied(true);
+      onCopyToast(`Copied Bookverse Command: ${endCommand}`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.warn('Clipboard write failed:', err);
+      onCopyToast('Could not copy — please copy manually.');
+    }
   };
 
   return (

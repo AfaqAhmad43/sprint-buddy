@@ -4,8 +4,10 @@ import { Bookmark, Trash2, CheckCircle2, Star } from 'lucide-react';
 export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDeleteBook, onTogglePinBook, onClearAll }) {
   if (!savedBooks || savedBooks.length === 0) return null;
 
-  // Sort pinned books to the top
-  const sortedBooks = [...savedBooks].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+  // Build sorted list WITH original indices so delete targets the correct item
+  const sortedBooks = savedBooks
+    .map((book, originalIdx) => ({ book, originalIdx }))
+    .sort((a, b) => (b.book.pinned ? 1 : 0) - (a.book.pinned ? 1 : 0));
 
   return (
     <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
@@ -15,8 +17,8 @@ export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDe
           Saved Books Library ({savedBooks.length})
         </h3>
         {savedBooks.length > 0 && (
-          <button 
-            onClick={onClearAll} 
+          <button
+            onClick={onClearAll}
             style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.75rem', cursor: 'pointer' }}
           >
             Clear History
@@ -25,12 +27,12 @@ export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDe
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-        {sortedBooks.map((book, idx) => {
+        {sortedBooks.map(({ book, originalIdx }) => {
           const isSelected = currentBook && currentBook.title === book.title && currentBook.totalPages === book.totalPages;
 
           return (
-            <div 
-              key={idx}
+            <div
+              key={originalIdx}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -75,7 +77,8 @@ export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDe
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDeleteBook(idx);
+                    // Bug fix: pass originalIdx so App deletes the correct book
+                    onDeleteBook(originalIdx);
                   }}
                   style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: '4px' }}
                   title="Remove Book"
