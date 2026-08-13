@@ -15,7 +15,7 @@ export default function SprintTimer({ currentBook, onCopyToast }) {
 
   const [copied, setCopied] = useState(false);
 
-  const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 350;
+  const totalPages = currentBook && currentBook.totalPages > 0 ? currentBook.totalPages : 304;
 
   // Handle timer countdown ticks
   useEffect(() => {
@@ -47,6 +47,15 @@ export default function SprintTimer({ currentBook, onCopyToast }) {
 
     return () => clearInterval(timerId);
   }, [isRunning, timeLeft, soundEnabled]);
+
+  // Persist sprint pace to localStorage so PercentageConverter can show an ETA
+  useEffect(() => {
+    if (sprintFinished && stats.pagesRead > 0 && parseFloat(stats.pagesPerHour) > 0) {
+      try {
+        localStorage.setItem('sprint_last_pace', stats.pagesPerHour);
+      } catch (e) {}
+    }
+  }, [sprintFinished, stats.pagesRead, stats.pagesPerHour]);
 
   const handleSetPresetDuration = (mins) => {
     setDurationMinutes(mins);

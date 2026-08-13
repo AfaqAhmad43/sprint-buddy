@@ -1,13 +1,27 @@
-import React from 'react';
-import { Bookmark, Trash2, CheckCircle2, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bookmark, Trash2, CheckCircle2, Star, AlertTriangle } from 'lucide-react';
 
 export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDeleteBook, onTogglePinBook, onClearAll }) {
+  // Two-step confirm state for "Clear History"
+  const [confirmClear, setConfirmClear] = useState(false);
+
   if (!savedBooks || savedBooks.length === 0) return null;
 
   // Build sorted list WITH original indices so delete targets the correct item
   const sortedBooks = savedBooks
     .map((book, originalIdx) => ({ book, originalIdx }))
     .sort((a, b) => (b.book.pinned ? 1 : 0) - (a.book.pinned ? 1 : 0));
+
+  const handleClearClick = () => {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      // Auto-cancel after 4 seconds if user doesn't confirm
+      setTimeout(() => setConfirmClear(false), 4000);
+    } else {
+      onClearAll();
+      setConfirmClear(false);
+    }
+  };
 
   return (
     <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
@@ -18,10 +32,24 @@ export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDe
         </h3>
         {savedBooks.length > 0 && (
           <button
-            onClick={onClearAll}
-            style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.75rem', cursor: 'pointer' }}
+            onClick={handleClearClick}
+            style={{
+              background: 'none',
+              border: confirmClear ? '1px solid rgba(239, 68, 68, 0.5)' : 'none',
+              color: confirmClear ? '#FCA5A5' : 'var(--text-dim)',
+              fontSize: '0.75rem',
+              cursor: 'pointer',
+              padding: confirmClear ? '0.2rem 0.5rem' : '0',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.3rem',
+              transition: 'all 0.2s ease'
+            }}
+            title={confirmClear ? 'Click again to confirm' : 'Clear all saved books'}
           >
-            Clear History
+            {confirmClear && <AlertTriangle size={12} />}
+            {confirmClear ? 'Confirm Clear?' : 'Clear History'}
           </button>
         )}
       </div>
@@ -77,7 +105,6 @@ export default function SavedBooks({ savedBooks, currentBook, onSelectBook, onDe
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Bug fix: pass originalIdx so App deletes the correct book
                     onDeleteBook(originalIdx);
                   }}
                   style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', padding: '4px' }}

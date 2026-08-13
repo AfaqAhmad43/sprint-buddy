@@ -159,11 +159,14 @@ const fetchFromGoogleBooks = async (query) => {
   const bestItem = data.items.find(item => item.volumeInfo?.pageCount > 0) || data.items[0];
   const info = bestItem.volumeInfo;
 
+  const rawCover = info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
+  const coverUrl = rawCover ? rawCover.replace(/^http:\/\//i, 'https://') : null;
+
   return {
     title: info.title || 'Unknown Title',
     author: info.authors ? info.authors.join(', ') : 'Unknown Author',
     totalPages: info.pageCount || 350,
-    coverUrl: info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null,
+    coverUrl,
     isbn: info.industryIdentifiers?.[0]?.identifier || null,
     source: 'Google Books'
   };
@@ -182,7 +185,7 @@ const fetchByIsbn = async (isbn) => {
           title: book.title || 'Unknown Title',
           author: book.authors ? book.authors.map(a => a.name).join(', ') : 'Unknown Author',
           totalPages: book.number_of_pages || 350,
-          coverUrl: book.cover?.medium || null,
+          coverUrl: book.cover?.medium ? book.cover.medium.replace(/^http:\/\//i, 'https://') : null,
           isbn: isbn,
           source: 'Open Library (ISBN)'
         };
